@@ -1,0 +1,28 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+<<<<<<< HEAD
+        "dev": "vite"
+=======
+        "dev": "concurrently \"vite\" \"php artisan serve\""
+>>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
+    },
+    "devDependencies": {
+        "@popperjs/core": "^2.11.6",
+        "@tailwindcss/vite": "^4.0.0",
+        "axios": "^1.11.0",
+        "bootstrap": "^5.2.3",
+<<<<<<< HEAD
+        "concurrently": "^9.0.1",
+=======
+        "concurrently": "^9.2.1",
+>>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
+        "laravel-vite-plugin": "^2.0.0",
+        "sass": "^1.56.1",
+        "tailwindcss": "^4.0.0",
+        "vite": "^7.0.7"
+    }
+}
