@@ -4,7 +4,6 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
     "content-hash": "7cf41fd1bb1ea3ea41fff00514a8a96c",
     "packages": [
         {
@@ -62,11 +61,6 @@
             "time": "2022-12-07T17:46:57+00:00"
         },
         {
-=======
-    "content-hash": "4760ac85ef5744fc9928144b629a8317",
-    "packages": [
-        {
->>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
             "name": "barryvdh/laravel-dompdf",
             "version": "v3.1.1",
             "source": {
@@ -273,7 +267,6 @@
             "time": "2024-02-09T16:56:22+00:00"
         },
         {
-<<<<<<< HEAD
             "name": "creasi/laravel-nusa",
             "version": "v0.1.16",
             "source": {
@@ -400,8 +393,6 @@
             "time": "2025-09-16T12:23:56+00:00"
         },
         {
-=======
->>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
             "name": "dflydev/dot-access-data",
             "version": "v3.0.3",
             "source": {
@@ -3654,7 +3645,6 @@
             "time": "2026-01-27T09:17:28+00:00"
         },
         {
-<<<<<<< HEAD
             "name": "picqer/php-barcode-generator",
             "version": "v3.2.4",
             "source": {
@@ -3736,8 +3726,6 @@
             "time": "2026-01-08T08:57:40+00:00"
         },
         {
-=======
->>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
             "name": "psr/clock",
             "version": "1.0.0",
             "source": {
@@ -4507,7 +4495,6 @@
             "time": "2026-02-21T17:12:03+00:00"
         },
         {
-<<<<<<< HEAD
             "name": "simplesoftwareio/simple-qrcode",
             "version": "4.2.0",
             "source": {
@@ -4576,8 +4563,6 @@
             "time": "2021-02-08T20:43:55+00:00"
         },
         {
-=======
->>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
             "name": "symfony/clock",
             "version": "v7.4.0",
             "source": {
@@ -9822,9 +9807,5 @@
         "php": "^8.2"
     },
     "platform-dev": {},
-<<<<<<< HEAD
     "plugin-api-version": "2.9.0"
-=======
-    "plugin-api-version": "2.6.0"
->>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
 }

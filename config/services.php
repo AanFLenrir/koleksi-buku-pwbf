@@ -35,25 +35,16 @@ return [
         ],
     ],
 
-<<<<<<< HEAD
     /*
     |--------------------------------------------------------------------------
     | Google OAuth
     |--------------------------------------------------------------------------
     */
 
-=======
->>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => env('GOOGLE_REDIRECT_URI'),
-<<<<<<< HEAD
     ],
 
 ];
-=======
-    ]
-
-];
->>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8

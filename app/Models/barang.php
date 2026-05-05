@@ -6,19 +6,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Barang extends Model
 {
-    protected $table = 'barang';
+    // Primary key bukan integer dan bukan auto-increment
     protected $primaryKey = 'id_barang';
-    public $incrementing = false; // karena primary key string
-    protected $keyType = 'string';
+    public    $incrementing = false;
+    protected $keyType      = 'string';
+
+    // Tidak pakai created_at / updated_at bawaan Laravel
+    public $timestamps = false;
+
+    protected $table = 'barang';
+
     protected $fillable = ['nama', 'harga'];
 
-    protected static function booted()
+    // id_barang diisi oleh trigger MySQL, jadi kita override save()
+    // agar id_barang bisa dikosongkan saat insert
+    public static function insertViaRaw(array $data): void
     {
-        static::creating(function ($barang) {
-            $date = date('ymd'); // format YYMMDD
-            $count = self::whereDate('created_at', now()->toDateString())->count() + 1;
-            $number = str_pad($count, 2, '0'); // 2 digit
-            $barang->id_barang = "BR-{$date}-{$number}";
-        });
+        \Illuminate\Support\Facades\DB::insert(
+            'INSERT INTO barang (id_barang, nama, harga) VALUES (?, ?, ?)',
+            ['', $data['nama'], $data['harga']]
+        );
     }
 }
