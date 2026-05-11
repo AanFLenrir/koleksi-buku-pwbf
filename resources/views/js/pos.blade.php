@@ -1,70 +1,107 @@
 @extends('layouts.app')
-
 @section('content')
 <div class="container-fluid py-4">
     <div class="row g-4">
 
-        {{-- FORM --}}
+        {{-- FORM INPUT BARANG --}}
         <div class="col-lg-4">
             <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header bg-primary text-white fw-semibold">
-                    POS
+                <div class="card-header bg-primary text-white rounded-top-4 fw-semibold">
+                    <i class="fas fa-cash-register me-2"></i>Point of Sales
                 </div>
-
                 <div class="card-body">
-
-                    <label>Kode Barang</label>
-                    <input type="text" id="inputKode" class="form-control">
-
-                    <label class="mt-2">Nama</label>
-                    <input id="inputNama" class="form-control" readonly>
-
-                    <label class="mt-2">Harga</label>
-                    <input id="inputHarga" class="form-control" readonly>
-
-                    <label class="mt-2">Qty</label>
-                    <input type="number" id="inputQty" class="form-control" value="1">
-
-                    <button class="btn btn-success w-100 mt-3" onclick="tambah()">
-                        Tambah
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Kode Barang</label>
+                        <input type="text" id="inputKode" class="form-control"
+                               placeholder="Scan / ketik kode barang..." autocomplete="off">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nama Barang</label>
+                        <input type="text" id="inputNama" class="form-control bg-warning-subtle" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Harga Barang</label>
+                        <input type="text" id="inputHarga" class="form-control bg-warning-subtle" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Jumlah</label>
+                        <input type="number" id="inputJumlah" class="form-control" value="1" min="1">
+                    </div>
+                    <button type="button" id="btnTambah" class="btn btn-success w-100" disabled onclick="tambahItem()">
+                        <i class="fas fa-plus me-2"></i>Tambahkan
                     </button>
+                </div>
+            </div>
 
-                    <hr>
-
-                    <label>Metode</label><br>
-
-                    <input type="radio" name="pay" value="tunai" checked> Tunai
-                    <input type="radio" name="pay" value="qris"> QRIS
-
+            {{-- PILIH METODE PEMBAYARAN --}}
+            <div class="card shadow-sm border-0 rounded-4 mt-4">
+                <div class="card-header bg-white border-bottom fw-semibold text-primary">
+                    <i class="fas fa-wallet me-2"></i>Metode Pembayaran
+                </div>
+                <div class="card-body d-flex flex-column gap-2">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="paymentMethod"
+                               id="pmTunai" value="tunai" checked>
+                        <label class="form-check-label fw-semibold" for="pmTunai">
+                            💵 Tunai
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="paymentMethod"
+                               id="pmVA" value="virtual_account">
+                        <label class="form-check-label fw-semibold" for="pmVA">
+                            🏦 Virtual Account <small class="text-muted">(BCA, BNI, BRI, Mandiri)</small>
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="paymentMethod"
+                               id="pmQRIS" value="qris">
+                        <label class="form-check-label fw-semibold" for="pmQRIS">
+                            📱 QRIS / GoPay
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
 
-        {{-- TABLE --}}
+        {{-- TABEL TRANSAKSI --}}
         <div class="col-lg-8">
             <div class="card shadow-sm border-0 rounded-4">
-                <div class="card-header">Keranjang</div>
-
+                <div class="card-header bg-white border-bottom fw-semibold text-primary d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-shopping-cart me-2"></i>Keranjang Belanja</span>
+                    <a href="{{ route('pos.riwayat') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-history me-1"></i>Riwayat Transaksi
+                    </a>
+                </div>
                 <div class="card-body">
-                    <table class="table">
-                        <thead>
+                    <table class="table table-bordered table-hover align-middle" id="tabelPOS">
+                        <thead class="table-primary">
                             <tr>
+                                <th>Kode</th>
                                 <th>Nama</th>
-                                <th>Qty</th>
+                                <th>Harga</th>
+                                <th>Jumlah</th>
                                 <th>Subtotal</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
-
-                        <tbody id="tbody">
-                            <tr id="empty">
-                                <td colspan="3" class="text-center">Kosong</td>
+                        <tbody id="tbodyPOS">
+                            <tr id="emptyRow">
+                                <td colspan="6" class="text-center text-muted">Belum ada item</td>
                             </tr>
                         </tbody>
+                        <tfoot>
+                            <tr class="table-success fw-bold">
+                                <td colspan="4" class="text-end">Total</td>
+                                <td colspan="2" id="totalHarga">Rp 0</td>
+                            </tr>
+                        </tfoot>
                     </table>
-
-                    <button class="btn btn-primary w-100" onclick="bayar()">
-                        BAYAR
-                    </button>
+                    <div class="text-end mt-3">
+                        <button type="button" id="btnBayar" class="btn btn-success px-4" disabled onclick="bayar()">
+                            <i class="fas fa-money-bill-wave me-2"></i>Bayar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -74,104 +111,268 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="{{ config('midtrans.client_key') }}"></script>
 
 <script>
-let barang = null;
+let hargaBarang     = 0;
+let namaBarang      = '';
+let kodeBarang      = '';
+let idBarang        = null;
+let barangDitemukan = false;
 
-// 🔊 BEEP FIX (tidak pakai file lokal)
-function beep(){
-    new Audio("https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg").play();
-}
+// CARI BARANG
+document.getElementById('inputKode').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    const kode = this.value.trim();
+    if (!kode) return;
 
-// ENTER CARI BARANG
-document.getElementById('inputKode').addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){
-        axios.post("{{ route('pos.cari') }}", {
-            kode: this.value,
-            _token: "{{ csrf_token() }}"
-        }).then(res => {
-            barang = res.data.data;
+    document.getElementById('inputNama').value   = '';
+    document.getElementById('inputHarga').value  = '';
+    document.getElementById('inputJumlah').value = 1;
+    document.getElementById('btnTambah').disabled = true;
+    barangDitemukan = false;
 
-            document.getElementById('inputNama').value = barang.nama;
-            document.getElementById('inputHarga').value = barang.harga;
+    axios.post('{{ route("pos.cari") }}', {
+        kode:   kode,
+        _token: '{{ csrf_token() }}'
+    })
+    .then(function (res) {
+        const b     = res.data.data;
+        namaBarang  = b.nama;
+        hargaBarang = b.harga;
+        kodeBarang  = b.id_barang;
+        idBarang    = b.id_barang;
+        barangDitemukan = true;
 
-            beep();
-        }).catch(() => {
-            Swal.fire('Error', 'Barang tidak ditemukan', 'error');
-        });
-    }
+        document.getElementById('inputNama').value  = b.nama;
+        document.getElementById('inputHarga').value = 'Rp ' + parseInt(b.harga).toLocaleString('id-ID');
+        document.getElementById('inputJumlah').value = 1;
+        document.getElementById('btnTambah').disabled = false;
+    })
+    .catch(function () {
+        Swal.fire('Tidak Ditemukan', 'Kode barang tidak ada di database.', 'error');
+    });
 });
 
-// TAMBAH KE KERANJANG
-function tambah(){
-    if(!barang) return;
+// TAMBAH ITEM
+function tambahItem() {
+    if (!barangDitemukan) return;
 
-    let qty = parseInt(document.getElementById('inputQty').value);
-    let sub = barang.harga * qty;
+    const jumlah = parseInt(document.getElementById('inputJumlah').value);
+    if (jumlah < 1) { alert('Jumlah minimal 1'); return; }
 
-    document.getElementById('empty')?.remove();
+    const btn = document.getElementById('btnTambah');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
 
-    document.getElementById('tbody').innerHTML += `
-        <tr data-id="${barang.id_barang}" data-qty="${qty}">
-            <td>${barang.nama}</td>
-            <td>${qty}</td>
-            <td>${sub}</td>
-        </tr>
-    `;
+    setTimeout(function () {
+        const subtotal = hargaBarang * jumlah;
+        const existing = document.querySelector(`tr[data-kode="${kodeBarang}"]`);
 
-    beep();
+        if (existing) {
+            const tdJumlah    = existing.querySelector('.td-jumlah');
+            const tdSubtotal  = existing.querySelector('.td-subtotal');
+            const newJumlah   = parseInt(tdJumlah.querySelector('input').value) + jumlah;
+            const newSubtotal = hargaBarang * newJumlah;
+            tdJumlah.querySelector('input').value = newJumlah;
+            tdSubtotal.textContent = 'Rp ' + newSubtotal.toLocaleString('id-ID');
+            tdSubtotal.dataset.val = newSubtotal;
+        } else {
+            const emptyRow = document.getElementById('emptyRow');
+            if (emptyRow) emptyRow.remove();
+
+            const tr = document.createElement('tr');
+            tr.dataset.kode     = kodeBarang;
+            tr.dataset.id       = idBarang;
+            tr.dataset.harga    = hargaBarang;
+            tr.innerHTML = `
+                <td><code>${kodeBarang}</code></td>
+                <td>${namaBarang}</td>
+                <td>Rp ${parseInt(hargaBarang).toLocaleString('id-ID')}</td>
+                <td class="td-jumlah">
+                    <input type="number" class="form-control form-control-sm" value="${jumlah}" min="1"
+                           style="width:80px" onchange="updateSubtotal(this)">
+                </td>
+                <td class="td-subtotal" data-val="${subtotal}">Rp ${subtotal.toLocaleString('id-ID')}</td>
+                <td>
+                    <button class="btn btn-danger btn-sm" onclick="hapusRow(this)">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            document.getElementById('tbodyPOS').appendChild(tr);
+        }
+
+        updateTotal();
+
+        document.getElementById('inputKode').value   = '';
+        document.getElementById('inputNama').value   = '';
+        document.getElementById('inputHarga').value  = '';
+        document.getElementById('inputJumlah').value = 1;
+        barangDitemukan = false;
+        idBarang        = null;
+        btn.disabled    = true;
+        btn.innerHTML   = '<i class="fas fa-plus me-2"></i>Tambahkan';
+        document.getElementById('inputKode').focus();
+        document.getElementById('btnBayar').disabled = false;
+    }, 300);
 }
 
-// BAYAR FULL FIX
-function bayar(){
+// UPDATE SUBTOTAL
+function updateSubtotal(input) {
+    const tr       = input.closest('tr');
+    const harga    = parseInt(tr.dataset.harga);
+    const jumlah   = parseInt(input.value) || 1;
+    const subtotal = harga * jumlah;
+    const tdSub    = tr.querySelector('.td-subtotal');
+    tdSub.textContent = 'Rp ' + subtotal.toLocaleString('id-ID');
+    tdSub.dataset.val = subtotal;
+    updateTotal();
+}
 
-    let rows = document.querySelectorAll('#tbody tr');
-    let items = [];
+// HAPUS ROW
+function hapusRow(btn) {
+    btn.closest('tr').remove();
+    if (document.getElementById('tbodyPOS').rows.length === 0) {
+        const tr = document.createElement('tr');
+        tr.id = 'emptyRow';
+        tr.innerHTML = '<td colspan="6" class="text-center text-muted">Belum ada item</td>';
+        document.getElementById('tbodyPOS').appendChild(tr);
+        document.getElementById('btnBayar').disabled = true;
+    }
+    updateTotal();
+}
 
-    rows.forEach(r => {
-        if(r.id === "empty") return;
+// UPDATE TOTAL
+function updateTotal() {
+    let total = 0;
+    document.querySelectorAll('.td-subtotal').forEach(function (td) {
+        total += parseInt(td.dataset.val) || 0;
+    });
+    document.getElementById('totalHarga').textContent = 'Rp ' + total.toLocaleString('id-ID');
+}
 
+// RESET KERANJANG
+function resetKeranjang() {
+    document.getElementById('tbodyPOS').innerHTML =
+        '<tr id="emptyRow"><td colspan="6" class="text-center text-muted">Belum ada item</td></tr>';
+    document.getElementById('totalHarga').textContent = 'Rp 0';
+    document.getElementById('inputKode').value   = '';
+    document.getElementById('inputNama').value   = '';
+    document.getElementById('inputHarga').value  = '';
+    document.getElementById('inputJumlah').value = 1;
+    barangDitemukan = false;
+    idBarang        = null;
+    const btn = document.getElementById('btnBayar');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-money-bill-wave me-2"></i>Bayar';
+}
+
+// BAYAR
+function bayar() {
+    const rows = document.querySelectorAll('#tbodyPOS tr[data-kode]');
+    if (rows.length === 0) return;
+
+    const items = [];
+    let total   = 0;
+    rows.forEach(function (tr) {
+        const jumlah   = parseInt(tr.querySelector('.td-jumlah input').value);
+        const subtotal = parseInt(tr.querySelector('.td-subtotal').dataset.val);
+        total += subtotal;
         items.push({
-            id: r.dataset.id,
-            qty: r.dataset.qty
+            id:  tr.dataset.id,
+            qty: jumlah,
         });
     });
 
-    let method = document.querySelector('input[name="pay"]:checked').value;
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const btn = document.getElementById('btnBayar');
+    btn.disabled  = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Memproses...';
 
-    axios.post("{{ route('pos.bayar') }}", {
-        items: items,
-        payment_method: method,
-        _token: "{{ csrf_token() }}"
-    })
-    .then(res => {
-
-        beep();
-
-        Swal.fire({
-            icon: 'success',
-            title: 'Transaksi Berhasil',
-            html: `
-                <b>Order:</b> ${res.data.order_code}<br>
-                <b>Total:</b> Rp ${res.data.total}
-            `
-        }).then(() => {
-            window.location.href = "{{ route('pos.riwayat') }}";
+    // TUNAI
+    if (paymentMethod === 'tunai') {
+        axios.post('{{ route("pos.bayar") }}', {
+            items:          items,
+            payment_method: 'tunai',
+            _token:         '{{ csrf_token() }}'
+        })
+        .then(function (res) {
+            Swal.fire({
+                icon:  'success',
+                title: 'Berhasil!',
+                html:  `Transaksi tunai berhasil!<br>
+                        <b>Order:</b> ${res.data.order_code}<br>
+                        <b>Customer:</b> ${res.data.customer}<br>
+                        <b>Total:</b> Rp ${parseInt(res.data.total).toLocaleString('id-ID')}`,
+            });
+            resetKeranjang();
+        })
+        .catch(function () {
+            Swal.fire('Error!', 'Transaksi gagal disimpan.', 'error');
+            btn.disabled  = false;
+            btn.innerHTML = '<i class="fas fa-money-bill-wave me-2"></i>Bayar';
         });
+        return;
+    }
 
+    // VIRTUAL ACCOUNT / QRIS
+    axios.post('{{ route("pos.bayar") }}', {
+        items:          items,
+        payment_method: paymentMethod,
+        _token:         '{{ csrf_token() }}'
     })
-    .catch(() => {
+    .then(function (res) {
+        snap.pay(res.data.snap_token, {
 
-        // ❗ TIDAK ADA GAGAL LAGI
-        Swal.fire({
-            icon: 'success',
-            title: 'Transaksi Berhasil'
-        }).then(() => {
-            window.location.href = "{{ route('pos.riwayat') }}";
+            // ── SC2: Tampilkan QR Code setelah pembayaran berhasil ──
+            onSuccess: function (result) {
+                Swal.fire({
+                    icon:  'success',
+                    title: '✅ Pembayaran Berhasil!',
+                    html:  `<b>Order:</b> ${res.data.order_code}<br>
+                            <b>Customer:</b> ${res.data.customer}<br>
+                            <b>Total:</b> Rp ${parseInt(res.data.total).toLocaleString('id-ID')}<br><br>
+                            <p class="mb-1"><small class="text-muted">QR Code Pesanan:</small></p>
+                            <img src="/qrcode/${res.data.order_code}"
+                                 alt="QR Code"
+                                 style="width:180px;height:180px;border:1px solid #eee;border-radius:8px;padding:6px;">`,
+                });
+                resetKeranjang();
+            },
+
+            onPending: function (result) {
+                Swal.fire({
+                    icon:  'info',
+                    title: '⏳ Menunggu Pembayaran',
+                    html:  `Order <b>${res.data.order_code}</b> menunggu pembayaran.`,
+                });
+                resetKeranjang();
+            },
+            onError: function (result) {
+                Swal.fire('❌ Gagal!', 'Pembayaran gagal. Silakan coba lagi.', 'error');
+                btn.disabled  = false;
+                btn.innerHTML = '<i class="fas fa-money-bill-wave me-2"></i>Bayar';
+            },
+            onClose: function () {
+                Swal.fire({
+                    icon:  'warning',
+                    title: 'Popup Ditutup',
+                    text:  'Kamu menutup popup sebelum pembayaran selesai.',
+                });
+                btn.disabled  = false;
+                btn.innerHTML = '<i class="fas fa-money-bill-wave me-2"></i>Bayar';
+            }
         });
-
+    })
+    .catch(function () {
+        Swal.fire('Error!', 'Gagal menghubungi server pembayaran.', 'error');
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fas fa-money-bill-wave me-2"></i>Bayar';
     });
 }
 </script>
