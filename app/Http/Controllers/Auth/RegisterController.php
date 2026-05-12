@@ -28,7 +28,11 @@ class RegisterController extends Controller
      *
      * @var string
      */
+<<<<<<< HEAD
     protected $redirectTo = '/home';
+=======
+    protected $redirectTo = '/dashboard';
+>>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
 
     /**
      * Create a new controller instance.
@@ -46,6 +50,7 @@ class RegisterController extends Controller
      * @param  array  $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
+<<<<<<< HEAD
     protected function validator(array $data)
     {
         return Validator::make($data, [
@@ -54,6 +59,16 @@ class RegisterController extends Controller
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
     }
+=======
+    // protected function validator(array $data)
+    // {
+    //     return Validator::make($data, [
+    //         'name' => ['required', 'string', 'max:255'],
+    //         'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+    //         'password' => ['required', 'string', 'min:8', 'confirmed'],
+    //     ]);
+    // }
+>>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
 
     /**
      * Create a new user instance after a valid registration.
@@ -61,6 +76,7 @@ class RegisterController extends Controller
      * @param  array  $data
      * @return \App\Models\User
      */
+<<<<<<< HEAD
     protected function create(array $data)
     {
         return User::create([
@@ -69,4 +85,14 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
         ]);
     }
+=======
+    // protected function create(array $data)
+    // {
+    //     return User::create([
+    //         'name' => $data['name'],
+    //         'email' => $data['email'],
+    //         'password' => Hash::make($data['password']),
+    //     ]);
+    // }
+>>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
 }

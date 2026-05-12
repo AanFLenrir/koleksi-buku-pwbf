@@ -1,11 +1,19 @@
+<<<<<<< HEAD
 @extends('layouts.app')
+=======
+@extends('layouts.login_layout')
+>>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
 
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
+<<<<<<< HEAD
                 <div class="card-header">{{ __('Register') }}</div>
+=======
+                <div class="card-header">{{ __('Register') }} (Not Working yet)</div>
+>>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
 
                 <div class="card-body">
                     <form method="POST" action="{{ route('register') }}">

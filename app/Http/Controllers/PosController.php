@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Barang;
 use App\Models\Customer;
 use App\Models\Order;
-use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Midtrans\Config;
@@ -15,26 +14,23 @@ class PosController extends Controller
 {
     public function __construct()
     {
-        Config::$serverKey    = config('midtrans.server_key');
+        Config::$serverKey = config('midtrans.server_key');
         Config::$isProduction = config('midtrans.is_production');
-        Config::$isSanitized  = config('midtrans.is_sanitized');
-        Config::$is3ds        = config('midtrans.is_3ds');
+        Config::$isSanitized = config('midtrans.is_sanitized');
+        Config::$is3ds = config('midtrans.is_3ds');
     }
 
     public function index()
     {
-        $barangs = Barang::all();
-        return view('js.pos', compact('barangs'));  // ← sesuai folder js
+        return view('js.pos');
     }
 
     public function cariBarang(Request $request)
     {
-        $barang = Barang::where('id_barang', $request->kode)
-            ->orWhere('nama', 'like', '%' . $request->q . '%')
-            ->first();
+        $barang = Barang::where('id_barang', $request->kode)->first();
 
         if (!$barang) {
-            return response()->json(['error' => 'Barang tidak ditemukan'], 404);
+            return response()->json(['message' => 'Barang tidak ditemukan'], 404);
         }
 
         return response()->json(['data' => $barang]);
@@ -42,174 +38,90 @@ class PosController extends Controller
 
     public function bayar(Request $request)
     {
-        $request->validate([
-            'items'          => 'required|array|min:1',
-            'items.*.id'     => 'required|exists:barang,id_barang',
-            'items.*.qty'    => 'required|integer|min:1',
-            'payment_method' => 'required|in:virtual_account,qris,tunai',
-        ]);
-
-        if ($request->payment_method === 'tunai') {
-            return $this->bayarTunai($request);
+        if (!$request->items || count($request->items) == 0) {
+            return response()->json(['message' => 'Keranjang kosong'], 422);
         }
 
         $customer = Customer::create([
             'name' => Customer::generateGuestName(),
         ]);
 
-        $total      = 0;
+        $total = 0;
         $orderItems = [];
-        $snapItems  = [];
 
         foreach ($request->items as $item) {
-            $barang   = Barang::where('id_barang', $item['id'])->firstOrFail();
+
+            $barang = Barang::where('id_barang', $item['id'])->first();
+
+            if (!$barang) {
+                return response()->json(['message' => 'Barang tidak ditemukan'], 404);
+            }
+
             $subtotal = $barang->harga * $item['qty'];
-            $total   += $subtotal;
+            $total += $subtotal;
 
             $orderItems[] = [
                 'barang_id' => $barang->id_barang,
-                'quantity'  => $item['qty'],
-                'price'     => $barang->harga,
-                'subtotal'  => $subtotal,
-            ];
-
-            $snapItems[] = [
-                'id'       => (string) $barang->id_barang,
-                'price'    => (int) $barang->harga,
-                'quantity' => (int) $item['qty'],
-                'name'     => substr($barang->nama, 0, 50),
+                'quantity' => $item['qty'],
+                'price' => $barang->harga,
+                'subtotal' => $subtotal,
             ];
         }
 
+        // SIMPAN ORDER → RIWAYAT
         $order = Order::create([
-            'order_code'   => 'ORD-' . strtoupper(Str::random(8)),
-            'customer_id'  => $customer->id,
+            'order_code' => 'ORD-' . strtoupper(Str::random(8)),
+            'customer_id' => $customer->id,
             'total_amount' => $total,
+            'payment_status' => $request->payment_method === 'tunai' ? 'lunas' : 'pending'
         ]);
 
         $order->items()->createMany($orderItems);
 
-        $midtransOrderId = 'POS-' . $order->order_code . '-' . time();
+        // =====================
+        // TUNAI
+        // =====================
+        if ($request->payment_method === 'tunai') {
+            return response()->json([
+                'success' => true,
+                'type' => 'tunai',
+                'order_code' => $order->order_code,
+                'total' => $total
+            ]);
+        }
 
-        $params = [
-            'transaction_details' => [
-                'order_id'     => $midtransOrderId,
-                'gross_amount' => (int) $total,
-            ],
-            'customer_details' => [
-                'first_name' => $customer->name,
-            ],
-            'item_details'     => $snapItems,
-            'enabled_payments' => $request->payment_method === 'virtual_account'
-                ? ['bca_va', 'bni_va', 'bri_va', 'mandiri_bill']
-                : ['gopay', 'qris'],
-        ];
-
+        // =====================
+        // MIDTRANS
+        // =====================
         try {
-            $snapToken = Snap::getSnapToken($params);
+            $snapToken = Snap::getSnapToken([
+                'transaction_details' => [
+                    'order_id' => $order->order_code,
+                    'gross_amount' => $total,
+                ],
+                'customer_details' => [
+                    'first_name' => $customer->name,
+                ]
+            ]);
         } catch (\Exception $e) {
             return response()->json([
-                'error'   => 'Midtrans error',
-                'message' => $e->getMessage(),
+                'message' => 'Midtrans error',
+                'error' => $e->getMessage()
             ], 500);
         }
 
-        Payment::create([
-            'order_id'          => $order->id,
-            'midtrans_order_id' => $midtransOrderId,
-            'amount'            => $total,
-            'status'            => 'pending',
-        ]);
-
         return response()->json([
+            'success' => true,
+            'type' => 'midtrans',
             'snap_token' => $snapToken,
-            'order_id'   => $order->id,
             'order_code' => $order->order_code,
-            'total'      => $total,
-            'customer'   => $customer->name,
+            'total' => $total
         ]);
-    }
-
-    private function bayarTunai(Request $request)
-    {
-        $customer = Customer::create([
-            'name' => Customer::generateGuestName(),
-        ]);
-
-        $total      = 0;
-        $orderItems = [];
-
-        foreach ($request->items as $item) {
-            $barang   = Barang::where('id_barang', $item['id'])->firstOrFail();
-            $subtotal = $barang->harga * $item['qty'];
-            $total   += $subtotal;
-
-            $orderItems[] = [
-                'barang_id' => $barang->id_barang,
-                'quantity'  => $item['qty'],
-                'price'     => $barang->harga,
-                'subtotal'  => $subtotal,
-            ];
-        }
-
-        $order = Order::create([
-            'order_code'     => 'ORD-' . strtoupper(Str::random(8)),
-            'customer_id'    => $customer->id,
-            'total_amount'   => $total,
-            'payment_status' => 'lunas',
-        ]);
-
-        $order->items()->createMany($orderItems);
-
-        return response()->json([
-            'success'    => true,
-            'order_code' => $order->order_code,
-            'total'      => $total,
-            'customer'   => $customer->name,
-            'message'    => 'Pembayaran tunai berhasil!',
-        ]);
-    }
-
-    public function webhook(Request $request)
-    {
-        $notif             = new \Midtrans\Notification();
-        $transactionStatus = $notif->transaction_status;
-        $orderId           = $notif->order_id;
-        $fraudStatus       = $notif->fraud_status ?? null;
-
-        $payment = Payment::where('midtrans_order_id', $orderId)->firstOrFail();
-
-        if ($transactionStatus === 'capture') {
-            $status = ($fraudStatus === 'accept') ? 'settlement' : 'pending';
-        } elseif ($transactionStatus === 'settlement') {
-            $status = 'settlement';
-        } elseif (in_array($transactionStatus, ['cancel', 'deny', 'expire'])) {
-            $status = $transactionStatus;
-        } else {
-            $status = 'pending';
-        }
-
-        $payment->update([
-            'status'         => $status,
-            'transaction_id' => $notif->transaction_id ?? null,
-            'payment_type'   => $notif->payment_type ?? null,
-            'paid_at'        => $status === 'settlement' ? now() : null,
-        ]);
-
-        if ($status === 'settlement') {
-            $payment->order->update(['payment_status' => 'lunas']);
-        }
-
-        return response()->json(['status' => 'ok']);
     }
 
     public function riwayat()
     {
-        $orders = Order::where('payment_status', 'lunas')
-            ->with(['customer', 'items.barang', 'payment'])
-            ->latest()
-            ->paginate(15);
-
-        return view('js.riwayat', compact('orders')); // ← fix dari pos.riwayat
+        $orders = Order::latest()->get();
+        return view('pos.riwayat', compact('orders'));
     }
 }

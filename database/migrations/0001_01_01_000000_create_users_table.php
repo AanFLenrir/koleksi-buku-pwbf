@@ -1,5 +1,9 @@
 <?php
 
+<<<<<<< HEAD
+=======
+use App\Models\Role;
+>>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -17,6 +21,10 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+<<<<<<< HEAD
+=======
+            $table->integer('id_role');
+>>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
             $table->rememberToken();
             $table->timestamps();
         });
