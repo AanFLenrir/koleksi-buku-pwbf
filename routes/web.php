@@ -1,6 +1,5 @@
 <?php
 
-<<<<<<< HEAD
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
@@ -12,8 +11,14 @@ use App\Http\Controllers\PosController;
 use App\Http\Controllers\PdfController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Controllers\CustomerController;
-use App\Http\Controllers\BarcodeReaderController; // ← Praktikum 1
-use App\Http\Controllers\VendorScanController;    // ← Praktikum 2
+use App\Http\Controllers\BarcodeReaderController;
+use App\Http\Controllers\VendorScanController;
+use App\Http\Controllers\TokoController;
+use App\Http\Controllers\GuestController;
+use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PapanController;
+use App\Http\Controllers\SSEController;
+use App\Http\Controllers\NfcController;
 
 // =====================
 // AUTH
@@ -27,6 +32,22 @@ Route::get('/verifikasi-otp', function () {
     return view('auth.otp');
 })->name('otp.form');
 Route::post('/verifikasi-otp', [AuthController::class, 'verifyOtp'])->name('otp.verify');
+
+// =====================
+// ANTRIAN (tanpa auth — akses publik)
+// =====================
+Route::get('/guest', [GuestController::class, 'index']);
+Route::post('/guest/daftar', [GuestController::class, 'daftar']);
+Route::get('/tiket/{antrian}', [GuestController::class, 'tiket']);
+Route::get('/papan', [PapanController::class, 'index']);
+Route::get('/sse/antrian', [SSEController::class, 'semua']);
+Route::get('/sse/antrian/{kode}', [SSEController::class, 'poli']);
+
+// =====================
+// NFC Scanner (tanpa auth — akses dari HP)
+// =====================
+Route::get('/nfc/scanner', [NfcController::class, 'scanner'])->name('nfc.scanner');
+Route::post('/nfc/scan', [NfcController::class, 'scan'])->name('nfc.scan');
 
 // =====================
 // PROTECTED ROUTES
@@ -66,7 +87,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/pos/riwayat', [PosController::class, 'riwayat'])->name('pos.riwayat');
 
     // -------------------------
-    // QR Code Generator (inline, dari modul sebelumnya)
+    // QR Code Generator
     // -------------------------
     Route::get('/qrcode/{order_code}', function ($order_code) {
         return response(
@@ -92,26 +113,30 @@ Route::middleware('auth')->group(function () {
     // -------------------------
     // Barcode Reader (Praktikum 1)
     // -------------------------
-    // Halaman scan barcode dari label tag harga
     Route::get('/barcode-reader', [BarcodeReaderController::class, 'index'])->name('barcode.reader');
-    // API: cari barang berdasarkan kode yang dibaca barcode
     Route::get('/barcode-reader/cari/{kode}', [BarcodeReaderController::class, 'cariBarang'])->name('barcode.cari');
 
     // -------------------------
     // QR Code Reader - Customer (Praktikum 2)
     // -------------------------
-    // Halaman sukses pembayaran + generate & simpan QR code
     Route::get('/pos/sukses/{id_pesanan}', [PosController::class, 'paymentSuccess'])->name('pos.sukses');
-    // Halaman untuk customer mengakses kembali QR code pesanannya kapan saja
     Route::get('/pesanan/{id}/qrcode', [PosController::class, 'lihatQrCode'])->name('pesanan.qrcode');
 
     // -------------------------
     // QR Code Reader - Vendor (Praktikum 2)
     // -------------------------
-    // Halaman scan QR code dari customer
     Route::get('/vendor/scan-qr', [VendorScanController::class, 'index'])->name('vendor.scan');
-    // API: cek detail pesanan berdasarkan id_pesanan dari QR code
     Route::get('/vendor/scan-qr/cek/{id_pesanan}', [VendorScanController::class, 'cekPesanan'])->name('vendor.cekPesanan');
+
+    // -------------------------
+    // Kunjungan Toko - Geolocation
+    // -------------------------
+    Route::get('/toko', [TokoController::class, 'index'])->name('toko.index');
+    Route::post('/toko', [TokoController::class, 'store'])->name('toko.store');
+    Route::get('/toko/kunjungan', [TokoController::class, 'kunjungan'])->name('toko.kunjungan');
+    Route::get('/toko/cari/{barcode}', [TokoController::class, 'cariToko'])->name('toko.cari');
+    Route::post('/toko/kunjungan/simpan', [TokoController::class, 'simpanKunjungan'])->name('toko.simpanKunjungan');
+    Route::get('/toko/{id}/barcode', [TokoController::class, 'cetakBarcode'])->name('toko.barcode');
 
     // -------------------------
     // JS Demo Pages
@@ -130,161 +155,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/kecamatan/{id}', [WilayahController::class, 'kecamatan'])->name('api.kecamatan');
     Route::get('/api/kelurahan/{id}', [WilayahController::class, 'kelurahan'])->name('api.kelurahan');
 
+    // -------------------------
+    // Admin Antrian (butuh auth)
+    // -------------------------
+    Route::get('/admin', [AdminController::class, 'index']);
+    Route::get('/admin/poli/{kode}', [AdminController::class, 'dashboard']);
+    Route::post('/admin/panggil', [AdminController::class, 'panggil']);
+    Route::post('/admin/lewati/{antrian}', [AdminController::class, 'lewati']);
+    Route::post('/admin/panggilLagi/{antrian}', [AdminController::class, 'panggilLagi']);
+
+    // -------------------------
+    // NFC Absensi (butuh auth)
+    // -------------------------
+    Route::get('/nfc', [NfcController::class, 'index'])->name('nfc.index');
+    Route::post('/nfc/kartu', [NfcController::class, 'store'])->name('nfc.store');
+    Route::delete('/nfc/kartu/{kartuNfc}', [NfcController::class, 'destroy'])->name('nfc.destroy');
+    Route::get('/nfc/rekap', [NfcController::class, 'rekap'])->name('nfc.rekap');
+
 });
 
 // =====================
 // MIDTRANS WEBHOOK (tanpa auth & tanpa CSRF)
 // =====================
 Route::post('/midtrans/webhook', [PosController::class, 'webhook'])->name('midtrans.webhook');
-=======
-use App\Http\Controllers\{
-    BarangController,
-    CartController,
-    DocumentController,
-    GoogleController,
-    HomeController,
-    MarketVendorController,
-    MenuController,
-    OtpController,
-    PaymentController,
-    PenjualanController,
-    WilayahController,
-    BukuController,
-    CategoryController
-};
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
-
-/*
-|--------------------------------------------------------------------------
-| Public Routes
-|--------------------------------------------------------------------------
-*/
-Route::get('/', [HomeController::class, 'landingPage'])->name('landing-page');
-Route::get('/products', [HomeController::class, 'productsPage'])->name('products-page');
-Route::get('/store/{id}', [HomeController::class, 'storeShow'])->name('store-show');
-Route::get('/products/filter', [MenuController::class, 'filterMenu'])->name('api-products-filter');
-Route::get('/checkout/status/{orderId}', [PaymentController::class, 'checkStatus'])->name('checkout.status');
-Route::get('/cart', [HomeController::class, 'cartShow'])->name('cart-show');
-Route::post('/cart', [CartController::class, 'cartPost'])->name('cart-post');
-Route::put('/cart', [CartController::class, 'cartUpdateByArray'])->name('cart-put');
-
-Route::get('/checkout', [PaymentController::class, 'goCheckOut'])->name('checkout-show');
-Route::post('/checkout/save', [PaymentController::class, 'saveOrder'])->name('checkout-save');
-Route::get('/checkout/sukses/{id}', [PaymentController::class, 'suksesShow'])->name('checkout-sukses');
-Route::get('/checkout/gagal', [PaymentController::class, 'errorCheckout'])->name('checkout-error');
-
-/*
-|--------------------------------------------------------------------------
-| Google OAuth Routes
-|--------------------------------------------------------------------------
-*/
-Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('google-login-redirect');
-Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name('google-login-callback');
-
-/*
-|--------------------------------------------------------------------------
-| OTP Verification (Protected)
-|--------------------------------------------------------------------------
-*/
-Route::middleware('auth')->group(function () {
-    Route::get('/verify-otp', [OtpController::class, 'show'])->name('verify-otp-show');
-    Route::post('/verify-otp', [OtpController::class, 'verify'])->name('verify-otp');
-});
-
-/*
-|--------------------------------------------------------------------------
-| Admin Routes (any admin)
-|--------------------------------------------------------------------------
-*/
-Route::middleware('isAnyAdmin')->group(function () {
-    Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
-});
-
-/*
-|--------------------------------------------------------------------------
-| Vendor Routes (vendor admin)
-|--------------------------------------------------------------------------
-*/
-Route::middleware('isVendorAdmin')->group(function () {
-    Route::get('/store', [HomeController::class, 'storeVendorShow'])->name('store-vendor-show');
-    Route::get('/orders', [HomeController::class, 'ordersVendorShow'])->name('orders-vendor-show');
-    
-    Route::get('/products-vendor', [HomeController::class, 'productsVendorShow'])->name('products-vendor-show');
-    Route::get('/products/edit/{id}', [HomeController::class, 'productsVendorEdit'])->name('products-vendor-edit');
-    Route::get('/products/add', [HomeController::class, 'productsVendorAdd'])->name('products-vendor-add');
-
-    Route::patch('/products/edit/{id}', [MarketVendorController::class, 'productsVendorPatch'])->name('products-vendor-patch');
-    Route::put('/products/add', [MarketVendorController::class, 'productsVendorPut'])->name('products-vendor-put');
-    Route::delete('/products/delete/{id}', [MarketVendorController::class, 'productsVendorDelete'])->name('products-vendor-delete');
-});
-
-/*
-|--------------------------------------------------------------------------
-| Administrator Routes
-|--------------------------------------------------------------------------
-*/
-Route::middleware('isAdministrator')->group(function () {
-    // Books
-    Route::get('/books', [HomeController::class, 'book'])->name('book');
-    Route::get('/books/add', [HomeController::class, 'addBook'])->name('add-book');
-    Route::get('/books/edit/{id}', [HomeController::class, 'editBook'])->name('edit-book');
-    Route::post('/books/add', [BukuController::class, 'createBuku'])->name('create-book');
-    Route::patch('/books/edit', [BukuController::class, 'updateBuku'])->name('update-book');
-    Route::delete('/books/delete/{id}', [BukuController::class, 'deleteBuku'])->name('delete-book');
-
-    // Book Categories
-    Route::get('/book-categories', [HomeController::class, 'bookCategories'])->name('book-categories');
-    Route::post('/book-categories/add', [CategoryController::class, 'createCategory'])->name('create-book-categories');
-    Route::patch('/book-categories/edit', [CategoryController::class, 'editCategory'])->name('edit-book-categories');
-    Route::delete('/book-categories/delete/{id}', [CategoryController::class, 'deleteCategory'])->name('delete-book-categories');
-    Route::get('/book-categories/get/{id}', [CategoryController::class, 'getCategoryByID'])->name('get-book-categories');
-
-    // Documents
-    Route::get('/document', [HomeController::class, 'createDocument'])->name('create-document');
-    Route::get('/document/generate/certificate', [HomeController::class, 'createCertificate'])->name('create-certificate');
-    Route::post('/document/generate/certificate', [DocumentController::class, 'generateCertificate'])->name('generate-certificate');
-    Route::get('/document/generate/invitation', [HomeController::class, 'createInvitation'])->name('create-invitation');
-    Route::post('/document/generate/invitation', [DocumentController::class, 'generateInvitation'])->name('generate-invitation');
-
-    // Barang
-    Route::get('/barang', [HomeController::class, 'showBarang'])->name('show-barang');
-    Route::get('/barang/edit/{id}', [HomeController::class, 'editBarang'])->name('edit-barang');
-    Route::patch('/barang/edit', [BarangController::class, 'updateBarang'])->name('api-edit-barang');
-    Route::get('/barang/add', [HomeController::class, 'addBarang'])->name('add-barang');
-    Route::post('/barang/add', [BarangController::class, 'createBarang'])->name('api-add-barang');
-    Route::delete('/barang/delete', [BarangController::class, 'deleteBarang'])->name('api-delete-barang');
-
-    Route::post('/barang/cetak-label', [BarangController::class, 'cetakLabelShow'])->name('cetak-labelBarang-preview');
-    Route::post('/barang/cetak-label-final', [DocumentController::class, 'generateLabels'])->name('cetak-labelBarang-final');
-    Route::post('/barang/get', [BarangController::class, 'getBarang'])->name('get-barang');
-    
-    // Demo JQuery Routes
-    Route::get('/barang-v2', [HomeController::class, 'showBarangV2'])->name('show-barang-v2');
-    Route::get('/barang-v2-datatable', [HomeController::class, 'showBarangV2Datatable'])->name('show-barang-v2-datatable');
-    Route::get('/daftar-kota', [HomeController::class, 'daftarKotaShow'])->name('show-kota');
-    
-    // Demo AJAX Axios Routes
-    Route::get('/wilayah', [HomeController::class, 'wilayahShow'])->name('show-wilayah');
-    Route::get('/wilayah-axios', [HomeController::class, 'wilayahShowAxios'])->name('show-wilayah-axios');
-    Route::get('/pos', [HomeController::class, 'POSShow'])->name('show-POS');
-    Route::get('/pos-axios', [HomeController::class, 'POSShowAxios'])->name('show-POS-axios');
-    
-    // POS Penjualan Routes
-    Route::post('/post-penjualan', [PenjualanController::class, 'storePenjualan'])->name('post-penjualan');
-    
-    // API Routes for Wilayah (AJAX with POST)
-    Route::post('/api/get-provinsi', [WilayahController::class, 'getProvinsi'])->name('get-provinsi');
-    Route::post('/api/get-kota', [WilayahController::class, 'getKota'])->name('get-kota');
-    Route::post('/api/get-kecamatan', [WilayahController::class, 'getKecamatan'])->name('get-kecamatan');
-    Route::post('/api/get-kelurahan', [WilayahController::class, 'getKelurahan'])->name('get-kelurahan');
-});
-
-/*
-|--------------------------------------------------------------------------
-| Auth Routes
-|--------------------------------------------------------------------------
-*/
-Auth::routes(['reset' => false]);
->>>>>>> 6aa88fca2337b38beb9cbd5d5c8dfb68c97e36e8
